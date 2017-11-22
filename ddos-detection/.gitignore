@@ -1,0 +1,5 @@
+*.pyc
+*.json
+.cache*
+sender
+sent.txt
