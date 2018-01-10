@@ -2,7 +2,7 @@
 
 ## Description
 
-The Twitter Trending Hashtags application receives a stream of tweets via the Twitter Streaming API and keeps a running count of
+The Twitter Trending Hashtags application receives a stream of tweets via the Twitter Streaming API and keeps a running count to identify the top trending hashtags. This information is then forwarded to a web UI and displayed to the user.
 
 ## Requirements
 
