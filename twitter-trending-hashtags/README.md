@@ -6,6 +6,7 @@ The Twitter Trending Hashtags application receives a stream of tweets via the Tw
 
 ## Requirements
 
+- Wallaroo 0.3.3
 - Python 2.7.x
 - Python Modules:
   - flask
