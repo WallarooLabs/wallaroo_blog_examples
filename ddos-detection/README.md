@@ -8,8 +8,9 @@ Once a server is identified as under a DoS or DDoS attack, it reports to the agg
 
 ## Requirements
 
+- [Wallaroo 0.2.2](https://github.com/WallarooLabs/wallaroo/tree/0.2.2)
+	**NOTE:** This is incompatible with Wallaroo 0.4.0 and up due to an API change, see [How to Update your Wallaroo Python Applications to the new API](https://blog.wallaroolabs.com/2018/01/how-to-update-your-wallaroo-python-applications-to-the-new-api/) to bring this example up to date if needed.
 - Python 2.7.x
-- Wallaroo
 
 ## Generating Data
 
