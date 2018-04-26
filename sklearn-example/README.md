@@ -4,6 +4,15 @@ This is an example of an application that classifies streams of hand-written dig
 
 You will need a working [Wallaroo Python API](https://docs.wallaroolabs.com/book/python/intro.html).
 
+## Requirements
+
+- [Wallaroo 0.4.0](https://github.com/WallarooLabs/wallaroo/tree/0.4.0) or greater.
+- Python 2.7.x
+- Python Modules:
+  - NumPy
+  - SciPy
+  - sklearn
+
 ## Training the models
 
 Before running the application we will have to run a script to train the the scikit-learn models and serialize them for later use:
