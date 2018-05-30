@@ -1,0 +1,12 @@
+#!/bin/bash
+
+machida --application-module twitter_wallaroo_app \
+  --in 127.0.0.1:8002 \
+  --out 127.0.0.1:7002 \
+  --metrics 127.0.0.1:5001 \
+  --control 127.0.0.1:6000 \
+  --name worker2 \
+  --ponythreads=1 \
+  --ponynoblock \
+  -j 127.0.0.1:6000
+
