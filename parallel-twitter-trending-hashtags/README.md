@@ -4,6 +4,8 @@
 
 The Twitter Trending Hashtags application receives a stream of tweets via the Twitter Streaming API and keeps a running count to identify the top trending hashtags. This information is then forwarded to a web UI and displayed to the user.
 
+You can learn more about this example from [our blog post](https://blog.wallaroolabs.com/2018/06/stream-processing-trending-hashtags-and-wallaroo/).
+
 ## Requirements
 
 - [Wallaroo 0.4.x](https://github.com/WallarooLabs/wallaroo/tree/0.4.1)
