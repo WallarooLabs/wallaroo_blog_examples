@@ -1,0 +1,37 @@
+{% extends '../layout/base.html' %}
+
+{% block content %}
+  <h1 class="mt-5">Alert list</h1>
+  <div class="float-right mb-2">
+    <a class="btn btn-primary" href="{% url 'alert_new' %}" >New Alert</a>
+  </div>
+
+  <div>
+    <span>Last known price: {{ last_price }}</span>
+  </div>
+
+  {% if alert_list %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">Price</th>
+          <th scope="col">Alert Sent</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for alert in alert_list %}
+        <tr>
+          <td>
+            <span>{{ alert.price }}</span>
+          </td>
+          <td>
+            <span class="badge badge-primary">{{ alert.sent }}</span>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="lead">You haven't created any alerts yet.</p>
+  {% endif %}
+{% endblock %}

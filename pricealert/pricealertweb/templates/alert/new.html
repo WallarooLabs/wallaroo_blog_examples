@@ -1,0 +1,14 @@
+{% extends '../layout/base.html' %}
+
+{% block content %}
+  <h1 class="mt-5">Add A New Alert</h1>
+  <form action="/pricealert/new/" method="post">
+    <div class="form-group">
+      {% csrf_token %}
+
+      {{ form.as_p }}
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+    <a class="btn btn-secondary" href="/" role="button">View alerts</a>
+  </form>
+{% endblock %}
