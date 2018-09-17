@@ -1,0 +1,5 @@
+env
+input
+log
+output
+*.pyc
