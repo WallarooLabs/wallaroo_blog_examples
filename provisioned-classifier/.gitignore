@@ -1,0 +1,9 @@
+ami/manifest.json
+app.zip
+env
+input
+log
+output
+*.pyc
+ssh_key.pem
+ssh_pubkey_in_ec2_format.pub

@@ -1,0 +1,5 @@
+#!/bin/sh
+DIRECTORY=$(cd $(dirname BASH_SOURCE[0]) && pwd)
+. ${DIRECTORY}/env/bin/activate
+export PYTHONPATH=$PYTHONPATH:${DIRECTORY}/classifier
+

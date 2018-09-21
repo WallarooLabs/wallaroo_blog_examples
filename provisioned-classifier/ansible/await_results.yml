@@ -1,0 +1,18 @@
+- hosts: coordinator
+  gather_facts: no
+  remote_user: ubuntu
+
+  tasks:
+  - name: Wait until all INPUT_LINES have arrived
+    shell: test "$(wc -l results.log | awk '{print $1}')" = "{{ input_lines }}"
+    register: result
+    until: result.rc == 0
+    retries: 120
+    delay: 60
+
+  - name: Compress results
+    shell: tar cvzf results.tgz results.log
+      warn=no
+
+
+

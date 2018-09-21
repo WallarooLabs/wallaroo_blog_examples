@@ -1,0 +1,5 @@
+name: classifier
+runtime: nodejs
+description: A parallel pandas classifier
+template:
+  description: A minimal JavaScript Pulumi program
