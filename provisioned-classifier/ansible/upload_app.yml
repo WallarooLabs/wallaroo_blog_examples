@@ -1,0 +1,32 @@
+- hosts: all
+  gather_facts: no
+  serial: 100
+  remote_user: ubuntu
+
+  tasks:
+  - name: clean slate
+    shell: |
+      killall -9 machida ;
+      killall -9 data_receiver ;
+      killall -9 send.py ;
+      sleep 1;
+      rm -rf /tmp/clas* ;
+    ignore_errors:
+      true
+    become:
+      true
+
+  - name: upload app.zip
+    copy:
+      src: ../app.zip
+      dest: /tmp/app.zip
+
+  - name: Unpack code
+    shell: |
+      mkdir -p {{ app_dir }} && unzip -o -d {{ app_dir }} /tmp/app.zip
+
+  - name: Install requirements
+    shell: |
+      cd {{ app_dir }} && pip install -U -vvv -r requirements.txt > piplog 2>&1
+    become:
+      true

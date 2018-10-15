@@ -1,0 +1,11 @@
+- hosts: coordinator
+  gather_facts: no
+  remote_user: ubuntu
+
+  tasks:
+  - name: Send cluster shutdown command to initializer
+    shell: |
+      cluster_shutdown "$INITIALIZER":5050
+    environment:
+      INITIALIZER: "{{ initializer_ip }}"
+

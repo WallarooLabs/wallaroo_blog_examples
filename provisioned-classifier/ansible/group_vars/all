@@ -1,0 +1,7 @@
+---
+app_dir: "/home/ubuntu/provisioned-classifier"
+workers_per_machine: 7
+n_workers: "{{  ((groups['workers'] | length) + 1) * workers_per_machine }}"
+
+initializer_ip: "{{ hostvars[(groups['initializer'][0])].private_ip }}"
+coordinator_ip: "{{ hostvars[(groups['coordinator'][0])].private_ip }}"

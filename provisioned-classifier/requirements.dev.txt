@@ -1,0 +1,3 @@
+ansible
+pulumi>=0.15.0
+pulumi_aws>=0.15.0

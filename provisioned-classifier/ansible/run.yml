@@ -1,0 +1,197 @@
+- hosts: all
+  gather_facts: no
+  serial: 100
+  remote_user: ubuntu
+
+  tasks:
+  - name: clean slate
+    shell: |
+      ps -ef | grep -v grep | grep -w {{ item }} | awk '{print $2}' | xargs kill -9
+    with_items:
+      - machida
+      - data_receiver
+      - metrics_reporter
+      - send.py
+    become: true
+
+  - name: clear resilience
+    shell: rm -rf /tmp/clas*
+    become: true
+
+  - name: "Debug: Check for local ../machida"
+    local_action: stat path=../machida
+    register: custom_machida
+
+  - name: "Debug: upload local machida"
+    copy:
+      src: ../machida
+      dest: /tmp/machida
+    when: custom_machida.stat.exists == true
+
+  - name: "Debug: overwrite machida"
+    shell: |
+       cp /tmp/machida /usr/bin/machida && chmod +x /usr/bin/machida
+    become:
+       true
+    when: custom_machida.stat.exists == true
+
+
+- hosts: coordinator
+  gather_facts: no
+  serial: 1
+  remote_user: ubuntu
+
+  tasks:
+  - name: Launch listener
+    shell: |
+      nohup data_receiver --framed --listen $COORDINATOR:9999 > results.log 2>&1 &
+    environment:
+      COORDINATOR: "{{ coordinator_ip }}"
+
+  - name: Wait for listener
+    wait_for:
+      host: "{{ coordinator_ip }}"
+      port: 9999
+      timeout: 10
+
+  - name: Launch metrics UI #TODO make sudo unnecessary
+    shell: |
+      /usr/bin/metrics_ui/AppRun start
+    become: true
+
+  - name: Wait for metrics UI
+    wait_for:
+      host: "{{ coordinator_ip }}"
+      port: 4000
+      timeout: 10
+
+- hosts: initializer
+  gather_facts: no
+  serial: 1
+  remote_user: ubuntu
+
+  tasks:
+  - name: Launch Initializer
+    shell: |
+      ulimit -n 8192
+      rm -rf log && mkdir -p log
+      export PYTHONPATH=$PYTHONPATH:./classifier
+      nohup cset proc -s wallaroo -e numactl -- \
+      -C 0,$W chrt -f 80 \
+      machida --application-module classifier \
+          --in $INITIALIZER:8888 \
+          --out $COORDINATOR:9999 \
+          --metrics $COORDINATOR:5001 \
+          --control $INITIALIZER:12500 \
+          --data $INITIALIZER:12600 \
+          --external $INITIALIZER:5050 \
+          --worker-count $N_WORKERS \
+          --cluster-initializer \
+          --ponynoblock --ponypinasio --ponythreads=1 > log/machida0.log 2>&1 &
+    environment:
+      INITIALIZER: "{{ initializer_ip }}"
+      COORDINATOR: "{{ coordinator_ip }}"
+      N_WORKERS: "{{ n_workers }}"
+      W: "{{ workers_per_machine }}"
+    args:
+      chdir: "{{ app_dir }}"
+    become:
+      true
+
+
+  - name: Wait for initializer to start listening
+    wait_for:
+      host: "{{ initializer_ip }}"
+      port: 12500
+      timeout: 10
+
+  - name: Launch extra workers on initializer node
+    shell: |
+      ulimit -n 8192
+      export PYTHONPATH=$PYTHONPATH:./classifier
+      for N in $(seq 1 $((W - 1))); do
+      WORKERNAME=$(echo "$THIS_HOST-$N" | sha256sum | awk '{print substr($1,1,10)}')
+      nohup cset proc -s wallaroo -e numactl -- \
+      -C $N,$W chrt -f 80 \
+      machida --application-module classifier \
+          --in $THIS_HOST:$((8888+N)) \
+          --out $COORDINATOR:9999 \
+          --metrics $COORDINATOR:5001 \
+          --my-control $THIS_HOST:$((12500+N)) \
+          --my-data $THIS_HOST:$((12600+N)) \
+          --control $INITIALIZER:12500 \
+          --name $WORKERNAME \
+          --ponynoblock --ponypinasio --ponythreads=1 \
+        > log/machida-$WORKERNAME.log 2>&1 &
+        done
+    environment:
+      INITIALIZER: "{{ initializer_ip }}"
+      COORDINATOR: "{{ coordinator_ip }}"
+      THIS_HOST: "{{ hostvars[inventory_hostname].private_ip }}"
+      W: "{{ workers_per_machine }}"
+    args:
+      chdir: "{{ app_dir }}"
+    become:
+      true
+
+- hosts: workers
+  gather_facts: no
+  remote_user: ubuntu
+
+  tasks:
+  - name: Launch workers
+    shell: |
+      ulimit -n 8192
+      rm -rf log && mkdir -p log
+      export PYTHONPATH=$PYTHONPATH:./classifier
+      for N in $(seq 0 $((W-1))); do
+      WORKERNAME=$(echo "$THIS_HOST-$N" | sha256sum | awk '{print substr($1,1,10)}')
+      nohup cset proc -s wallaroo -e numactl -- \
+      -C $N,$W chrt -f 80 \
+      nohup machida --application-module classifier \
+          --in "$THIS_HOST":$((8888+N)) \
+          --out "$COORDINATOR":9999 \
+          --metrics "$COORDINATOR":5001 \
+          --control "$INITIALIZER":12500 \
+          --my-control "$THIS_HOST":$((12500+N)) \
+          --my-data "$THIS_HOST":$((12600+N)) \
+          --name "$WORKERNAME" \
+          --ponynoblock --ponypinasio --ponythreads=1 \
+        > log/machida-$WORKERNAME.log 2>&1 &
+        sleep 0.3
+        done
+    environment:
+      INITIALIZER: "{{ initializer_ip }}"
+      COORDINATOR: "{{ coordinator_ip }}"
+      THIS_HOST: "{{ hostvars[inventory_hostname].private_ip }}"
+      W: "{{ workers_per_machine }}"
+    args:
+      chdir: "{{ app_dir }}"
+    become:
+      true
+
+- hosts: initializer
+  gather_facts: no
+  serial: 1
+  remote_user: ubuntu
+
+  tasks:
+  - name: Wait for source
+    wait_for:
+      host: "{{ initializer_ip }}"
+      port: 8888
+      timeout: 10
+
+- hosts: coordinator
+  gather_facts: no
+  serial: 1
+  remote_user: ubuntu
+
+  tasks:
+  - name: Start sending stream of data
+    shell: |
+      nohup ./bin/send.py "$INITIALIZER":8888 --lines {{ input_lines }} &
+    environment:
+      INITIALIZER: "{{ initializer_ip }}"
+    args:
+      chdir: "{{ app_dir }}"
