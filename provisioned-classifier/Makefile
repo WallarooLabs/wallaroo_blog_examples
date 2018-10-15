@@ -29,7 +29,7 @@ run-cluster: app.zip
 	    ./run.yml --extra-vars "input_lines=$(INPUT_LINES)" && \
 	  echo "\n\n\n" &&\
 	  echo "To see the cluster's real-time metrics, please visit" &&\
-	  echo "http://$$(grep -a1 coordinator inventory.yml | tail -1 | awk '{print $$1}'):4000" && \
+	  echo "http://$$(grep -a1 metrics_host inventory.yml | tail -1 | awk '{print $$1}'):4000" && \
 	  echo "\n\n\n" &&\
 	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
 	    ./await_results.yml --extra-vars "input_lines=$(INPUT_LINES)" &&\
@@ -37,7 +37,7 @@ run-cluster: app.zip
 	    ./cluster_shutdown.yml )
 
 get-results:
-	C=`grep -a1 coordinator ansible/inventory.yml | tail -n1 | awk '{print $$1}'` ; \
+	C=`grep -a1 metrics_host ansible/inventory.yml | tail -n1 | awk '{print $$1}'` ; \
 	scp -i ssh_key.pem ubuntu@$$C:results.tgz output/
 
 up:

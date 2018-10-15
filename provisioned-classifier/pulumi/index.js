@@ -32,17 +32,17 @@ function instance(name) {
      keyName: keyPair.keyName})
 }
 
-let coordinator = instance("classifier-coordinator");
+let metrics_host = instance("classifier-metrics_host");
 let initializer = instance("classifier-initializer");
 let workers = [];
 for(var i=0; i<clusterSize-1; i++){
   workers.push(instance("classifier-"+(i+1).toString()));
 }
 
-exports.coordinator = [
-  {"name": coordinator.tags["Name"],
-   "publicDns": coordinator.publicDns,
-   "privateIp": coordinator.privateIp}];
+exports.metrics_host = [
+  {"name": metrics_host.tags["Name"],
+   "publicDns": metrics_host.publicDns,
+   "privateIp": metrics_host.privateIp}];
 
 exports.initializer = [
   {"name": initializer.tags["Name"],

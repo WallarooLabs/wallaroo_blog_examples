@@ -14,10 +14,10 @@ fi
 
 inventory=ansible/inventory.yml
 initializer=$(grep -a1 initializer "$inventory"  | tail -n+2 | awk '{print $1}')
-coordinator=$(grep -a1 coordinator "$inventory"  | tail -n+2 | awk '{print $1}')
+metrics_host=$(grep -a1 metrics_host "$inventory"  | tail -n+2 | awk '{print $1}')
 workers=$(cat "$inventory" | awk 'p; /workers/{p=1}' | awk '{print $1}')
 
-for host in $coordinator $initializer $workers; do
+for host in $metrics_host $initializer $workers; do
   tmux split-window "ssh ubuntu@${host} -i ./ssh_key.pem";
   tmux select-layout even-horizontal
 done

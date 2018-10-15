@@ -13,8 +13,8 @@ make_line() {
 
 STACK=$(pulumi stack output | tail -n+3)
 
-echo "[coordinator]"
-echo "$(make_line coordinator)"
+echo "[metrics_host]"
+echo "$(make_line metrics_host)"
 
 echo "\n[initializer]"
 echo "$(make_line initializer)"

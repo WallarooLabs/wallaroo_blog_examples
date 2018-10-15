@@ -1,4 +1,4 @@
-- hosts: coordinator
+- hosts: metrics_host
   gather_facts: no
   remote_user: ubuntu
 

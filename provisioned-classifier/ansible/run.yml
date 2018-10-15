@@ -36,7 +36,7 @@
     when: custom_machida.stat.exists == true
 
 
-- hosts: coordinator
+- hosts: metrics_host
   gather_facts: no
   serial: 1
   remote_user: ubuntu
@@ -44,13 +44,13 @@
   tasks:
   - name: Launch listener
     shell: |
-      nohup data_receiver --framed --listen $COORDINATOR:9999 > results.log 2>&1 &
+      nohup data_receiver --framed --listen $METRICS_HOST:9999 > results.log 2>&1 &
     environment:
-      COORDINATOR: "{{ coordinator_ip }}"
+      METRICS_HOST: "{{ metrics_host_ip }}"
 
   - name: Wait for listener
     wait_for:
-      host: "{{ coordinator_ip }}"
+      host: "{{ metrics_host_ip }}"
       port: 9999
       timeout: 10
 
@@ -61,7 +61,7 @@
 
   - name: Wait for metrics UI
     wait_for:
-      host: "{{ coordinator_ip }}"
+      host: "{{ metrics_host_ip }}"
       port: 4000
       timeout: 10
 
@@ -80,8 +80,8 @@
       -C 0,$W chrt -f 80 \
       machida --application-module classifier \
           --in $INITIALIZER:8888 \
-          --out $COORDINATOR:9999 \
-          --metrics $COORDINATOR:5001 \
+          --out $METRICS_HOST:9999 \
+          --metrics $METRICS_HOST:5001 \
           --control $INITIALIZER:12500 \
           --data $INITIALIZER:12600 \
           --external $INITIALIZER:5050 \
@@ -90,7 +90,7 @@
           --ponynoblock --ponypinasio --ponythreads=1 > log/machida0.log 2>&1 &
     environment:
       INITIALIZER: "{{ initializer_ip }}"
-      COORDINATOR: "{{ coordinator_ip }}"
+      METRICS_HOST: "{{ metrics_host_ip }}"
       N_WORKERS: "{{ n_workers }}"
       W: "{{ workers_per_machine }}"
     args:
@@ -115,8 +115,8 @@
       -C $N,$W chrt -f 80 \
       machida --application-module classifier \
           --in $THIS_HOST:$((8888+N)) \
-          --out $COORDINATOR:9999 \
-          --metrics $COORDINATOR:5001 \
+          --out $METRICS_HOST:9999 \
+          --metrics $METRICS_HOST:5001 \
           --my-control $THIS_HOST:$((12500+N)) \
           --my-data $THIS_HOST:$((12600+N)) \
           --control $INITIALIZER:12500 \
@@ -126,7 +126,7 @@
         done
     environment:
       INITIALIZER: "{{ initializer_ip }}"
-      COORDINATOR: "{{ coordinator_ip }}"
+      METRICS_HOST: "{{ metrics_host_ip }}"
       THIS_HOST: "{{ hostvars[inventory_hostname].private_ip }}"
       W: "{{ workers_per_machine }}"
     args:
@@ -150,8 +150,8 @@
       -C $N,$W chrt -f 80 \
       nohup machida --application-module classifier \
           --in "$THIS_HOST":$((8888+N)) \
-          --out "$COORDINATOR":9999 \
-          --metrics "$COORDINATOR":5001 \
+          --out "$METRICS_HOST":9999 \
+          --metrics "$METRICS_HOST":5001 \
           --control "$INITIALIZER":12500 \
           --my-control "$THIS_HOST":$((12500+N)) \
           --my-data "$THIS_HOST":$((12600+N)) \
@@ -162,7 +162,7 @@
         done
     environment:
       INITIALIZER: "{{ initializer_ip }}"
-      COORDINATOR: "{{ coordinator_ip }}"
+      METRICS_HOST: "{{ metrics_host_ip }}"
       THIS_HOST: "{{ hostvars[inventory_hostname].private_ip }}"
       W: "{{ workers_per_machine }}"
     args:
@@ -182,7 +182,7 @@
       port: 8888
       timeout: 10
 
-- hosts: coordinator
+- hosts: metrics_host
   gather_facts: no
   serial: 1
   remote_user: ubuntu
