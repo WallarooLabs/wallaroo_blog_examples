@@ -10,9 +10,17 @@
     retries: 120
     delay: 60
 
+  - name: Create ramdisk to place result file
+    # This is a hack to work around small SSD on the metrics node
+    # We have a lot of RAM
+    shell: |
+      mkdir -p /ramdisk
+      mount -t tmpfs -o size=8G tmpfs /ramdisk
+      mkdir /ramdisk/results
+      chmod a+rwX /ramdisk/results
+    become:
+      true
+
   - name: Compress results
-    shell: tar cvzf results.tgz results.log
+    shell: tar cvzf /ramdisk/results/results.tgz results.log
       warn=no
-
-
-

@@ -38,7 +38,7 @@ run-cluster: app.zip
 
 get-results:
 	C=`grep -a1 metrics_host ansible/inventory.yml | tail -n1 | awk '{print $$1}'` ; \
-	scp -i ssh_key.pem ubuntu@$$C:results.tgz output/
+	scp -i ssh_key.pem ubuntu@$$C:/ramdisk/results/results.tgz output/
 
 up:
 	@if [ -z "$(CLUSTER_SIZE)" ]; then echo "CLUSTER_SIZE not set"; exit 1; fi
