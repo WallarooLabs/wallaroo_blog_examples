@@ -19,16 +19,13 @@ env:
 	                pip install -r requirements.dev.txt
 
 
-run-cluster:
+run-cluster: urls.txt
 	@if [ -z "$(INPUT_LINES)" ]; then echo "INPUT_LINES not set"; exit 1; fi
 	@(. ./activate && \
 	  cd ansible && \
 	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
 	    ./run.yml --extra-vars "input_lines=$(INPUT_LINES)" && \
-	  echo "\n\n\n" &&\
-	  echo "To see the cluster's real-time metrics, please visit" &&\
-	  echo "http://$$(grep -a1 metrics_host inventory.yml | tail -1 | awk '{print $$1}'):4000" && \
-	  echo "\n\n\n" &&\
+	  cat ../$< && \
 	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
 	    ./await_results.yml --extra-vars "input_lines=$(INPUT_LINES)" &&\
 	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
@@ -47,6 +44,9 @@ up: app.zip
 	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
 	    ./upload_app.yml)
 
+urls.txt:
+	. ./activate && cd pulumi && ./generate_links.sh > ../$@
+
 pulumi/.up: ssh_pubkey_in_ec2_format.pub
 	. ./activate && cd pulumi && \
 	  pulumi up $(PULUMI_ARGS) &&\
@@ -55,7 +55,7 @@ pulumi/.up: ssh_pubkey_in_ec2_format.pub
 down:
 	. ./activate && cd pulumi && \
 	  pulumi destroy $(PULUMI_ARGS) &&\
-	  rm -f .up
+	  rm -f .up urls.txt
 
 ssh_key.pem:
 	@yes | ssh-keygen -b 2048 -t rsa -f $@ -q -N ""
