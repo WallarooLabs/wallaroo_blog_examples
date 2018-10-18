@@ -1,20 +1,20 @@
 - hosts: all
   gather_facts: no
-  serial: 100
   remote_user: ubuntu
 
   tasks:
+  - name: Wait 600 seconds for target connection to become reachable/usable
+    wait_for_connection:
+
   - name: clean slate
     shell: |
-      killall -9 machida ;
-      killall -9 data_receiver ;
-      killall -9 send.py ;
-      sleep 1;
-      rm -rf /tmp/clas* ;
-    ignore_errors:
-      true
-    become:
-      true
+      ps -ef | grep -v grep | grep -w {{ item }} | awk '{print $2}' | xargs kill -9
+    with_items:
+      - machida
+      - data_receiver
+      - metrics_reporter
+      - send.py
+    become: true
 
   - name: upload app.zip
     copy:

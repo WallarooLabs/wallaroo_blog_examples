@@ -2,12 +2,16 @@
 const pulumi = require("@pulumi/pulumi");
 const aws = require("@pulumi/aws");
 const fs = require("fs");
+const cw = require("./cloudwatch");
 
 let instanceType = "c5.4xlarge";
 let ami = fs.readFileSync("latest.ami").toString();
 let clusterSize = parseInt(fs.readFileSync("cluster_size").toString(), 10);
+
 let pubKey = fs.readFileSync("../ssh_pubkey_in_ec2_format.pub").toString();
 let keyPair = new aws.ec2.KeyPair("ClassifierKey", {publicKey: pubKey});
+
+let onCallNumbers = JSON.parse(fs.readFileSync("../ONCALL.json", "utf8"));
 let secGrp = new aws.ec2.SecurityGroup(
   "ClassifierSecGrp",
   {ingress: [{ "protocol": "tcp", "fromPort": 22,
@@ -32,29 +36,36 @@ function instance(name) {
      keyName: keyPair.keyName})
 }
 
+function outputs(instance) {
+  return { "name": instance.tags["Name"],
+	   "instanceId": instance.id,
+	   "publicDns": instance.publicDns,
+	   "privateIp": instance.privateIp }
+}
+
+function dashboardUrl(name) {
+  return name.apply(function(n){
+    return ("https://us-west-2.console.aws.amazon.com/" +
+	    "cloudwatch/home?region=us-west-2#dashboards:name=" +
+	    n)
+  })
+}
+
 let metrics_host = instance("classifier-metrics_host");
 let initializer = instance("classifier-initializer");
 let workers = [];
 for(var i=0; i<clusterSize-1; i++){
   workers.push(instance("classifier-"+(i+1).toString()));
 }
+let allInstances = [metrics_host, initializer].concat(workers);
+let dashboard = cw.mkDash("classifier-dashboard", allInstances);
+let alarmTopic = cw.mkTopic("classifier-alarms");
+let alarms = cw.mkStatusAlarmsForInstances("classifier", alarmTopic, allInstances);
+let subs = onCallNumbers.map(n => cw.subscribeNumber(alarmTopic, n));
 
-exports.metrics_host = [
-  {"name": metrics_host.tags["Name"],
-   "publicDns": metrics_host.publicDns,
-   "privateIp": metrics_host.privateIp}];
-
-exports.initializer = [
-  {"name": initializer.tags["Name"],
-   "publicDns": initializer.publicDns,
-   "privateIp": initializer.privateIp}];
-
-exports.workers =
-  workers.map(function(s){
-    return { "name": s.tags["Name"],
-	     "publicDns": s.publicDns,
-	     "privateIp": s.privateIp}
-  });
-
-
+exports.metrics_host = [outputs(metrics_host)];
+exports.initializer = [outputs(initializer)];
+exports.workers = workers.map(outputs);
+exports.dashboard = dashboardUrl(dashboard.dashboardName);
+exports.alarmTopic = alarmTopic.displayName.apply(n => n);
 
