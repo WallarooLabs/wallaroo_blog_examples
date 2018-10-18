@@ -19,12 +19,10 @@ env:
 	                pip install -r requirements.dev.txt
 
 
-run-cluster: app.zip
+run-cluster:
 	@if [ -z "$(INPUT_LINES)" ]; then echo "INPUT_LINES not set"; exit 1; fi
 	@(. ./activate && \
 	  cd ansible && \
-	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
-	    ./upload_app.yml && \
 	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
 	    ./run.yml --extra-vars "input_lines=$(INPUT_LINES)" && \
 	  echo "\n\n\n" &&\
@@ -40,15 +38,14 @@ get-results:
 	C=`grep -a1 metrics_host ansible/inventory.yml | tail -n1 | awk '{print $$1}'` ; \
 	scp -i ssh_key.pem ubuntu@$$C:/ramdisk/results/results.tgz output/
 
-up:
+up: app.zip
 	@if [ -z "$(CLUSTER_SIZE)" ]; then echo "CLUSTER_SIZE not set"; exit 1; fi
 	@echo "$(CLUSTER_SIZE)" > pulumi/cluster_size
 	@rm -f pulumi/.up ansible/inventory.yml
-	$(MAKE) -s pulumi/.up ansible/inventory.yml
-	(. ./activate && \
-	  cd ansible && \
-	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem \
-	     ./setup.yml)
+	@$(MAKE) -s pulumi/.up ansible/inventory.yml
+	@(cd ansible && \
+	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
+	    ./upload_app.yml)
 
 pulumi/.up: ssh_pubkey_in_ec2_format.pub
 	. ./activate && cd pulumi && \
@@ -94,8 +91,8 @@ output:
 	mkdir -p output
 
 
-run-new: input log output
+run-locally: input log output
 	@-killall -9 machida 2>/dev/null
 	. ./activate && \
-	INPUT=$(INPUT) OUTPUT="output/new_$(notdir $(INPUT))" \
-	  N_WORKERS=$(N_WORKERS) ./bin/run_machida.sh
+	INPUT_LINES=$(INPUT_LINES) OUTPUT="output/local_run" \
+	  N_WORKERS=$(N_WORKERS) ./bin/run_locally.sh

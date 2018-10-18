@@ -71,13 +71,12 @@ wait_for_port(){
 }
 
 send_data() {
-#  ./bin/send.py "$LEADER":"$SOURCE_PORT" "$INPUT" &
-  ./bin/send.py "$LEADER":"$SOURCE_PORT" --lines 200000 &
+  ./bin/send.py "$LEADER":"$SOURCE_PORT" --lines "$INPUT_LINES" &
 }
 
 wait_for_output(){
   OUTFILE="$OUTPUT"
-  NEED=$(($(wc -l "$INPUT" | awk '{print $1}') - 1))
+  NEED=$(($INPUT_LINES - 1))
   GOT=$(wc -l "$OUTFILE" | awk '{print $1}')
   while [ "$GOT" != "$NEED" ] ; do
         GOT=$(wc -l "$OUTFILE" | awk '{print $1}') ;
