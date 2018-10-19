@@ -3,6 +3,7 @@ STACK_NAME := classifier-demo2
 AWS_REGION := us-west-2
 PULUMI_ARGS := --skip-preview --parallel 100 --yes --non-interactive --color never
 INPUT_FILES := input/1000.csv input/100000.csv input/1000000.csv input/10000000.csv
+CLUSTER_SIZE ?= $(shell cat pulumi/cluster_size)
 
 setup: env $(INPUT_FILES) log output stack
 

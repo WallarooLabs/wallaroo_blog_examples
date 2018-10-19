@@ -51,7 +51,6 @@ function dashboardUrl(name) {
   })
 }
 
-
 let metrics_host = instance("classifier-metrics_host");
 let initializer = instance("classifier-initializer");
 let workers = [];
