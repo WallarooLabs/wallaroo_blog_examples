@@ -1,7 +1,8 @@
-//"use strict";
+"use strict";
 const pulumi = require("@pulumi/pulumi");
 const aws = require("@pulumi/aws");
 const fs = require("fs");
+const cw = require("./cloudwatch");
 
 let instanceType = "c5.4xlarge";
 let ami = fs.readFileSync("latest.ami").toString();
@@ -49,33 +50,6 @@ function dashboardUrl(name) {
   })
 }
 
-function mkDash(name, instances) {
-  let dashBody = pulumi.all(instances.map(i => i.id)).apply(
-    (iids) => {
-      x = defineMetrics(iids);
-      return JSON.stringify({
-      widgets: [
-        {type: "metric",
-         properties: {
-	   metrics: x,
-           period: 300,
-           stat: "Average",
-           region: "us-west-2",
-           title: "EC2 Instance CPU"
-         }
-        }
-      ]
-      })
-    })
-  return new aws.cloudwatch.Dashboard(name, {
-	dashboardName: name,
-	dashboardBody: dashBody
-  })
-};
-
-function defineMetrics(instanceIds) {
-  return instanceIds.map(id => ["AWS/EC2", "CPUUtilization", "InstanceId", id])
-}
 
 let metrics_host = instance("classifier-metrics_host");
 let initializer = instance("classifier-initializer");
@@ -83,23 +57,14 @@ let workers = [];
 for(var i=0; i<clusterSize-1; i++){
   workers.push(instance("classifier-"+(i+1).toString()));
 }
-
-let dashboard =
-     mkDash("classifier-dashboard",
- 	       [metrics_host, initializer].concat(workers))
-
-
+let allInstances = [metrics_host, initializer].concat(workers);
+let dashboard = cw.mkDash("classifier-dashboard", allInstances);
+let alarmTopic = cw.mkTopic("classifier-alarms");
+let alarms = cw.mkStatusAlarmsForInstances("classifier", alarmTopic, allInstances);
 
 exports.metrics_host = [outputs(metrics_host)];
 exports.initializer = [outputs(initializer)];
 exports.workers = workers.map(outputs);
-
 exports.dashboard = dashboardUrl(dashboard.dashboardName);
-
-//let alertTopic = cw.mkTopic("classifier-alerts");
-//let alerts = [metrics_host,initializer].concat(workers).map(function(i){
-//  return cw.mkStatusAlarmForInstance("classifier", alertTopic, i)
-//})
-
-//exports.alertTopic = alertTopic.displayName.apply(n => n)
-//exports.alert = alerts.map(a => a.name.apply(n => n))
+exports.alarmTopic = alarmTopic.displayName.apply(n => n)
+//exports.alerts = alerts.map(a => a.urn.apply(n => n))
