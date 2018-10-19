@@ -49,7 +49,7 @@ ONCALL.json:
 	@echo 'Please add your phone number and run "make up" to receive status alerts'
 	@echo  '[]' > $@
 
-urls.txt:
+urls.txt: pulumi/.up
 	. ./activate && cd pulumi && ./generate_links.sh > ../$@
 
 pulumi/.up: ssh_pubkey_in_ec2_format.pub

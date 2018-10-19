@@ -70,4 +70,3 @@ exports.workers = workers.map(outputs);
 exports.dashboard = dashboardUrl(dashboard.dashboardName);
 exports.alarmTopic = alarmTopic.displayName.apply(n => n);
 
-// exports.alerts = alerts.map(a => a.urn.apply(n => n))
