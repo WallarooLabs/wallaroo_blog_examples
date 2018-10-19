@@ -8,3 +8,4 @@ output
 ssh_key.pem
 ssh_pubkey_in_ec2_format.pub
 urls.txt
+ONCALL.json

@@ -11,6 +11,7 @@ let clusterSize = parseInt(fs.readFileSync("cluster_size").toString(), 10);
 let pubKey = fs.readFileSync("../ssh_pubkey_in_ec2_format.pub").toString();
 let keyPair = new aws.ec2.KeyPair("ClassifierKey", {publicKey: pubKey});
 
+let onCallNumbers = JSON.parse(fs.readFileSync("../ONCALL.json", "utf8"));
 let secGrp = new aws.ec2.SecurityGroup(
   "ClassifierSecGrp",
   {ingress: [{ "protocol": "tcp", "fromPort": 22,
@@ -61,10 +62,12 @@ let allInstances = [metrics_host, initializer].concat(workers);
 let dashboard = cw.mkDash("classifier-dashboard", allInstances);
 let alarmTopic = cw.mkTopic("classifier-alarms");
 let alarms = cw.mkStatusAlarmsForInstances("classifier", alarmTopic, allInstances);
+let subs = onCallNumbers.map(n => cw.subscribeNumber(alarmTopic, n));
 
 exports.metrics_host = [outputs(metrics_host)];
 exports.initializer = [outputs(initializer)];
 exports.workers = workers.map(outputs);
 exports.dashboard = dashboardUrl(dashboard.dashboardName);
-exports.alarmTopic = alarmTopic.displayName.apply(n => n)
-//exports.alerts = alerts.map(a => a.urn.apply(n => n))
+exports.alarmTopic = alarmTopic.displayName.apply(n => n);
+
+// exports.alerts = alerts.map(a => a.urn.apply(n => n))

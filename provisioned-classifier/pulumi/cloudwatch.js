@@ -36,6 +36,13 @@ module.exports.mkTopic = function(name) {
   return new aws.sns.Topic(name)
 }
 
+module.exports.subscribeNumber = function(topic, number){
+  return new aws.sns.TopicSubscription("alerts-to-" + number,
+				       {endpoint: number,
+					protocol: "sms",
+					topic: topic.arn})
+}
+
 function defineMetrics(instanceIds) {
   return instanceIds.map(id => ["AWS/EC2", "CPUUtilization", "InstanceId", id])
 }
@@ -48,7 +55,7 @@ function defineAlarm(prefix, topic, instanceId) {
     return new aws.cloudwatch.MetricAlarm(
       prefix + "-" + metricName + "-alarm-" + instanceId, {
 	comparisonOperator: "GreaterThanOrEqualToThreshold",
-	evaluationPeriods: 2,
+	evaluationPeriods: 1,
 	metricName: metricName,
 	namespace: "AWS/EC2",
 	dimensions: {"InstanceId": instanceId },

@@ -35,7 +35,7 @@ get-results:
 	C=`grep -a1 metrics_host ansible/inventory.yml | tail -n1 | awk '{print $$1}'` ; \
 	scp -i ssh_key.pem ubuntu@$$C:/ramdisk/results/results.tgz output/
 
-up: app.zip
+up: app.zip ONCALL.json
 	@if [ -z "$(CLUSTER_SIZE)" ]; then echo "CLUSTER_SIZE not set"; exit 1; fi
 	@echo "$(CLUSTER_SIZE)" > pulumi/cluster_size
 	@rm -f pulumi/.up ansible/inventory.yml
@@ -43,6 +43,11 @@ up: app.zip
 	@(cd ansible && \
 	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
 	    ./upload_app.yml)
+
+ONCALL.json:
+	@echo 'Setting up empty ONCALL.json'
+	@echo 'Please add your phone number and run "make up" to receive status alerts'
+	@echo  '[]' > $@
 
 urls.txt:
 	. ./activate && cd pulumi && ./generate_links.sh > ../$@
