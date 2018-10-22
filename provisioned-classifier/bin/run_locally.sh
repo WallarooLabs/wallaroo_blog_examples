@@ -76,7 +76,7 @@ send_data() {
 
 wait_for_output(){
   OUTFILE="$OUTPUT"
-  NEED=$(($INPUT_LINES - 1))
+  NEED=$(($INPUT_LINES))
   GOT=$(wc -l "$OUTFILE" | awk '{print $1}')
   while [ "$GOT" != "$NEED" ] ; do
         GOT=$(wc -l "$OUTFILE" | awk '{print $1}') ;
