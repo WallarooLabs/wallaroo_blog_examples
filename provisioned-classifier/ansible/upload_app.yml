@@ -3,6 +3,9 @@
   remote_user: ubuntu
 
   tasks:
+  - name: Wait 600 seconds for target connection to become reachable/usable
+    wait_for_connection:
+
   - name: clean slate
     shell: |
       ps -ef | grep -v grep | grep -w {{ item }} | awk '{print $2}' | xargs kill -9
