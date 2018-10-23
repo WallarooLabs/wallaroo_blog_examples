@@ -41,7 +41,8 @@ up: app.zip ONCALL.json
 	@echo "$(CLUSTER_SIZE)" > pulumi/cluster_size
 	@rm -f pulumi/.up ansible/inventory.yml
 	@$(MAKE) -s pulumi/.up ansible/inventory.yml
-	@(cd ansible && \
+	@(. ./activate &&\
+	  cd ansible && \
 	  ansible-playbook -i ./inventory.yml --key-file ../ssh_key.pem  \
 	    ./upload_app.yml)
 
