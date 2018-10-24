@@ -4,7 +4,7 @@ AWS_REGION := us-west-2
 PULUMI_ARGS := --skip-preview --parallel 100 --yes --non-interactive --color never
 CLUSTER_SIZE ?= $(shell cat pulumi/cluster_size)
 
-setup: env log output stack
+setup: env log output stack ONCALL.json
 
 stack:
 	(. ./activate && \
@@ -83,19 +83,11 @@ ansible/inventory.yml: ansible pulumi/.up
 ansible:
 	mkdir -p ansible
 
-input/%.csv: input
-	. ./activate && \
-	  ./bin/generate_input_data.py $(basename $(notdir $@)) > $@
-
-input:
-	mkdir -p input
-
 log:
 	mkdir -p log
 
 output:
 	mkdir -p output
-
 
 run-locally: input log output
 	@-killall -9 machida 2>/dev/null
