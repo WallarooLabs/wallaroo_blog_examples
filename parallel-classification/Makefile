@@ -1,6 +1,6 @@
 .PHONY: run-new run-old setup
 
-INPUT_FILES := input/1000.csv input/100000.csv input/1000000.csv input/10000000.csv
+INPUT_FILES := input/1000.csv input/100000.csv input/1000000.csv
 
 setup: env $(INPUT_FILES) log output
 

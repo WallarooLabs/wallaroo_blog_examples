@@ -1,7 +1,7 @@
 import hashlib
 import random
 
-CLASSIFIER_SLOWNESS=10
+CLASSIFIER_SLOWNESS=20
 
 """
 This module simulates a black-box classifier that works on Pandas

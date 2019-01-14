@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+
 HOST=127.0.0.1
 SINK_PORT=9999
 SOURCE_PORT=8888
@@ -18,12 +19,13 @@ clear_resilience(){
 }
 
 stop_listener() {
-  (ps aux | grep '[d]ata_receiver' | awk '{print $2}' | xargs -L1 kill -9) 2>/dev/null\
+  (ps auxw | grep '[d]ata_receiver' | awk '{print $2}' | xargs -L1 kill -9) 2>/dev/null\
     || true
 }
 
 start_listener() {
-  stop_listener
+  stop_listener;
+  sleep 1;
   nohup data_receiver  \
         --framed --listen "$LEADER":"$SINK_PORT" \
         --ponynopin \
